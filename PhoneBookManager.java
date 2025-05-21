@@ -1,21 +1,30 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.collectionframework_22chapter.collectionRefactoringV7;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class PhoneBookManager {
 
-  final int MAX_CNT = 100;
-  private static PhoneInfo[] infoStorage;
-  private static int curCnt;
-
+  private static PhoneBookManager inst=null;
+  private static final List<PhoneInfo> infoList=new ArrayList<>();
   public PhoneBookManager() {
-    infoStorage = new PhoneInfo[MAX_CNT];
-    curCnt = 0;
+
+  }
+
+
+  public static PhoneBookManager createManagerInst(){
+    if(inst==null){
+      inst=new PhoneBookManager();
+    }
+    return inst;
   }
 
   private void readFriendInfo(PhoneInfo info) {
     System.out.print("이름: ");
     info.name = MenuViewer.keyboard.nextLine();
     System.out.print("전화번호: ");
-    info.phoneNumber = MenuViewer.keyboard.nextLine();
+    info.phoneNumber =MenuViewer.keyboard.nextLine();
   }
 
   private void readUnivFriendInfo(PhoneUnivInfo uni) {
@@ -46,42 +55,55 @@ public class PhoneBookManager {
     MenuViewer.keyboard.nextLine();
   }
 
-  public void inputData() {
+  public void inputData() throws MenuChoiceException {
     System.out.println("데이터 입력을 시작합니다.");
     System.out.println("1. 일반, 2. 대학, 3. 회사");
     System.out.print("선택>> ");
     int choice = MenuViewer.keyboard.nextInt();
     MenuViewer.keyboard.nextLine();
-    PhoneInfo info = null;
 
-    if (choice == 1) {
-      info = new PhoneInfo("", "");
-      readFriendInfo(info);
-      infoStorage[curCnt++] = info;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
+    if(choice < INPUT_SELECT.NORMAL || choice > INPUT_SELECT.COMPANY) {
+      throw new MenuChoiceException(choice);
 
-    } else if (choice == 2) {
-      PhoneUnivInfo uni = new PhoneUnivInfo("", "", "", 0);
-      readUnivFriendInfo(uni);
-      infoStorage[curCnt++] = uni;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
-    } else if (choice == 3) {
-      PhoneCompanyInfo com = new PhoneCompanyInfo("", "", "");
-      readCompanyFriendInfo(com);
-      infoStorage[curCnt++] = com;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
     }
-    System.out.println("잘못된 선택입니다.");
+    PhoneInfo info;
+      if (choice == INPUT_SELECT.NORMAL) {
+        info = new PhoneInfo("", "");
+        readFriendInfo(info);
+
+      } else if (choice == INPUT_SELECT.UNIV) {
+        info = new PhoneUnivInfo("", "", "", 0);
+        readUnivFriendInfo((PhoneUnivInfo) info);
+
+      } else if (choice == INPUT_SELECT.COMPANY) {
+        info = new PhoneCompanyInfo("", "", "");
+        readCompanyFriendInfo((PhoneCompanyInfo) info);
+
+      } else {
+        System.out.println("잘못된 선택입니다.");
+        return;
+      }
+      infoList.add(info);
+      System.out.println("데이터 입력이 완료되었습니다. \n");
+
   }
 
-
+  private int search(String name) {
+    for (int idx = 0; idx < infoList.size(); idx++) {
+      PhoneInfo curInfo = infoList.get(idx);
+      if (name.equals(curInfo.name)) {
+        return idx;
+      }
+    }
+    return -1;
+  }
   public void searchData() {
     System.out.println("데이터 검색을 시작합니다.");
     System.out.print("이름 : ");
     String search = MenuViewer.keyboard.nextLine();
     int dataIdx = search(search);
     if (dataIdx >= 0) {
-      PhoneBookManager.infoStorage[dataIdx].showPhoneInfo();
+      infoList.get(dataIdx).showPhoneInfo();
       System.out.println("데이터 검색이 완료되었습니다. \n");
     } else {
       System.out.println("해당하는 데이터가 존재하지 않습니다. \n");
@@ -97,24 +119,12 @@ public class PhoneBookManager {
     if (dataIdx < 0) {
       System.out.println("해당하는 데이터가 존재하지 않습니다. \n");
     } else {
+      infoList.remove(dataIdx);
 
-      for (int idx = dataIdx; idx < (PhoneBookManager.curCnt - 1); idx++) {
-        //인덱스 왼쪽땡겨돌며 데이터 밀기
-        PhoneBookManager.infoStorage[idx] = PhoneBookManager.infoStorage[idx + 1];
-      }
-      PhoneBookManager.curCnt--;//확인사살로 결정된 데이터 없애기
+    //  curCnt--;//확인사살로 결정된 데이터 없애기
       System.out.println("데이터 삭제가 완료되었습니다. \n");
     }
   }
 
-  private int search(String name) {
-    for (int idx = 0; idx < PhoneBookManager.curCnt; idx++) {
-      PhoneInfo curInfo = PhoneBookManager.infoStorage[idx];
-      if (name.compareTo(curInfo.name) == 0) {
-        return idx;
-      }
-    }
-    return -1;
-  }
-}
 
+}

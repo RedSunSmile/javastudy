@@ -1,4 +1,4 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.collectionframework_22chapter.collectionRefactoringV7;
 
 import java.util.Scanner;
 

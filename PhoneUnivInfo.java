@@ -1,6 +1,6 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.collectionframework_22chapter.collectionRefactoringV7;
 
-public class PhoneUnivInfo extends PhoneInfo{
+public class PhoneUnivInfo extends PhoneInfo {
 
   String major;
   int year;
@@ -17,5 +17,18 @@ public class PhoneUnivInfo extends PhoneInfo{
 
     System.out.println("major : "+major);
     System.out.println("year : "+year);
+  }
+
+  public int hashCode(){
+    return name.hashCode();
+  }
+
+  public boolean equals(Object obj){
+    PhoneUnivInfo cmp=(PhoneUnivInfo)obj;
+    if(name.compareTo(cmp.name)==0){
+      return true;
+    }else{
+      return false;
+    }
   }
 }
