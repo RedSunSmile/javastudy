@@ -1,21 +1,31 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.fileIOstream_24chapter.streamRefactoringV8;
+
+import java.io.*;
+import java.util.*;
 
 public class PhoneBookManager {
+  private int curCnt;
+  private final File datafile=new File("PhoneBook.dat");
+  private static PhoneBookManager inst=null;
+  private static List<PhoneInfo> infoList=new ArrayList<>();
+  public PhoneBookManager() throws ClassNotFoundException {
+    curCnt=0;
+    readFromFile();
+  }
 
-  final int MAX_CNT = 100;
-  private static PhoneInfo[] infoStorage;
-  private static int curCnt;
-
-  public PhoneBookManager() {
-    infoStorage = new PhoneInfo[MAX_CNT];
-    curCnt = 0;
+  public static PhoneBookManager createManagerInst() throws ClassNotFoundException{
+    if(inst==null){
+      inst=new PhoneBookManager();
+    }
+    return inst;
   }
 
   private void readFriendInfo(PhoneInfo info) {
     System.out.print("이름: ");
     info.name = MenuViewer.keyboard.nextLine();
     System.out.print("전화번호: ");
-    info.phoneNumber = MenuViewer.keyboard.nextLine();
+    info.phoneNumber =MenuViewer.keyboard.nextLine();
+
   }
 
   private void readUnivFriendInfo(PhoneUnivInfo uni) {
@@ -32,6 +42,7 @@ public class PhoneBookManager {
     uni.year = MenuViewer.keyboard.nextInt();
     //버퍼비우기
     MenuViewer.keyboard.nextLine();
+
   }
 
   private void readCompanyFriendInfo(PhoneCompanyInfo company) {
@@ -44,77 +55,110 @@ public class PhoneBookManager {
     System.out.println("회사: ");
     company.company = MenuViewer.keyboard.nextLine();
     MenuViewer.keyboard.nextLine();
+
   }
 
-  public void inputData() {
+  public void inputData() throws MenuChoiceException {
     System.out.println("데이터 입력을 시작합니다.");
     System.out.println("1. 일반, 2. 대학, 3. 회사");
     System.out.print("선택>> ");
     int choice = MenuViewer.keyboard.nextInt();
     MenuViewer.keyboard.nextLine();
-    PhoneInfo info = null;
 
-    if (choice == 1) {
-      info = new PhoneInfo("", "");
-      readFriendInfo(info);
-      infoStorage[curCnt++] = info;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
+    if(choice < INPUT_SELECT.NORMAL || choice > INPUT_SELECT.COMPANY) {
+      throw new MenuChoiceException(choice);
 
-    } else if (choice == 2) {
-      PhoneUnivInfo uni = new PhoneUnivInfo("", "", "", 0);
-      readUnivFriendInfo(uni);
-      infoStorage[curCnt++] = uni;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
-    } else if (choice == 3) {
-      PhoneCompanyInfo com = new PhoneCompanyInfo("", "", "");
-      readCompanyFriendInfo(com);
-      infoStorage[curCnt++] = com;
-      System.out.println("데이터 입력이 완료되었습니다. \n");
     }
-    System.out.println("잘못된 선택입니다.");
+    PhoneInfo info;
+      if (choice == INPUT_SELECT.NORMAL) {
+        info = new PhoneInfo("", "");
+        readFriendInfo(info);
+
+      } else if (choice == INPUT_SELECT.UNIV) {
+        info = new PhoneUnivInfo("", "", "", 0);
+        readUnivFriendInfo((PhoneUnivInfo) info);
+
+      } else if (choice == INPUT_SELECT.COMPANY) {
+        info = new PhoneCompanyInfo("", "", "");
+        readCompanyFriendInfo((PhoneCompanyInfo) info);
+
+      } else {
+        System.out.println("잘못된 선택입니다.");
+        return;
+      }
+      infoList.add(info);
+      curCnt++;
+      System.out.println("데이터 입력이 완료되었습니다. \n");
+
   }
 
+  public boolean deleteData() throws MenuChoiceException {
+    System.out.println("데이터 삭제를 시작합니다.");
+    System.out.print("이름 : ");
+    String removeName = MenuViewer.keyboard.nextLine();
+    for(PhoneInfo info:infoList){
+      if(info.name.equals(removeName)){
+        boolean remove = infoList.remove(info);
+        System.out.println("데이터 삭제가 완료되었습니다. \n");
+        return remove;
+      }else{
+        System.out.println("해당하는 데이터가 존재하지 않습니다. \n");
+      }
+    }
+
+    return false;
+  }
+
+  private int search(String name) {
+    for (int idx = 0; idx < infoList.size(); idx++) {
+      PhoneInfo curInfo = infoList.get(idx);
+      if (name.equals(curInfo.name)) {
+        return idx;
+      }
+    }
+    return -1;
+  }
 
   public void searchData() {
     System.out.println("데이터 검색을 시작합니다.");
     System.out.print("이름 : ");
-    String search = MenuViewer.keyboard.nextLine();
-    int dataIdx = search(search);
+    String searchNumber = MenuViewer.keyboard.nextLine();
+    int dataIdx = search(searchNumber);
     if (dataIdx >= 0) {
-      PhoneBookManager.infoStorage[dataIdx].showPhoneInfo();
+      infoList.get(dataIdx).showPhoneInfo();
       System.out.println("데이터 검색이 완료되었습니다. \n");
     } else {
       System.out.println("해당하는 데이터가 존재하지 않습니다. \n");
     }
   }
 
-  public void deleteData() {
-    System.out.println("데이터 삭제를 시작합니다.");
-    System.out.print("이름 : ");
-    String name = MenuViewer.keyboard.nextLine();
-    int dataIdx = search(name);
+  public void saveToFile(){
+    try{
+      FileOutputStream file=new FileOutputStream(datafile);
+      ObjectOutputStream out=new ObjectOutputStream(file);
 
-    if (dataIdx < 0) {
-      System.out.println("해당하는 데이터가 존재하지 않습니다. \n");
-    } else {
-
-      for (int idx = dataIdx; idx < (PhoneBookManager.curCnt - 1); idx++) {
-        //인덱스 왼쪽땡겨돌며 데이터 밀기
-        PhoneBookManager.infoStorage[idx] = PhoneBookManager.infoStorage[idx + 1];
+      for (PhoneInfo info :PhoneBookManager.infoList) {
+        out.writeObject(info);
       }
-      PhoneBookManager.curCnt--;//확인사살로 결정된 데이터 없애기
-      System.out.println("데이터 삭제가 완료되었습니다. \n");
+    }catch(IOException e){
+      throw new RuntimeException(e);
     }
   }
 
-  private int search(String name) {
-    for (int idx = 0; idx < PhoneBookManager.curCnt; idx++) {
-      PhoneInfo curInfo = PhoneBookManager.infoStorage[idx];
-      if (name.compareTo(curInfo.name) == 0) {
-        return idx;
-      }
+  public void readFromFile() throws ClassNotFoundException {
+    if(!datafile.exists()){
+      return;
     }
-    return -1;
+    try{
+      FileInputStream file=new FileInputStream(datafile);
+      ObjectInputStream in=new ObjectInputStream(file);
+      while(true){
+        PhoneInfo info=(PhoneInfo)in.readObject();
+        infoList.add(info);
+      }
+    } catch (EOFException e){//데이터더이상 없을때 EOFException e만으로도종료, 아무것도안에 안써줌!!
+    }catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
-

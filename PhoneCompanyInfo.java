@@ -1,6 +1,6 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.fileIOstream_24chapter.streamRefactoringV8;
 
-public class PhoneCompanyInfo extends PhoneInfo{
+public class PhoneCompanyInfo extends PhoneInfo {
 
   String company;
 
@@ -12,5 +12,18 @@ public class PhoneCompanyInfo extends PhoneInfo{
   public void showPhoneInfo(){
     super.showPhoneInfo();
     System.out.println("company : "+company);
+  }
+
+  public int hashCode(){
+    return name.hashCode();
+  }
+
+  public boolean equals(Object obj){
+    PhoneCompanyInfo cmp=(PhoneCompanyInfo)obj;
+    if(name.compareTo(cmp.name)==0){
+      return true;
+    }else{
+      return false;
+    }
   }
 }

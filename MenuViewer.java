@@ -1,4 +1,4 @@
-package editlist.overriding2_16chapter.refactoring;
+package editlist.fileIOstream_24chapter.streamRefactoringV8;
 
 import java.util.Scanner;
 
